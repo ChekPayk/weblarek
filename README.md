@@ -98,3 +98,71 @@ Presenter - презентер содержит основную логику п
 `emit<T extends object>(event: string, data?: T): void` - инициализация события. При вызове события в метод передается название события и объект с данными, который будет использован как аргумент для вызова обработчика.  
 `trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void` - возвращает функцию, при вызове которой инициализируется требуемое в параметрах событие с передачей в него данных из второго параметра.
 
+#### Данные
+
+Интерфейс товара описывает товар. Поле price может быть null для товаров, которые бесценны (их нельзя купить).
+
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  category: string;
+  price: number | null;
+}
+
+Интерфейс покупателя описывает данные, которые покупатель указывает при оформлении заказа: способ оплаты, адрес доставки, электронную почту и телефон.
+
+type TPayment = 'online' | 'cash' ''
+
+interface Buyer {
+  payment: TPayment;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+##### Модели данных
+###### Класс CatalogModel
+Для хранения и управления каталогом товаров.
+
+_items: Product[] — массив всех товаров;
+_preview: Product — товар, выбранный для отображения в модальном окне.
+
+setItems(items: Product[]): void — сохраняет массив товаров;
+getItems(): Product[] — возвращает массив товаров;
+getItem(id: string): Product | undefined — возвращает товар по id;
+setPreview(item: Product): void — сохраняет товар для отображения;
+getPreview(): Product — возвращает товар для отображения.
+
+
+###### Класс BasketModel
+Хранение товаров, выбранных покупателем, в корзине.
+
+_items: Product[] — массив товаров, добавленных в корзину.
+
+getItems(): Product[] — возвращает массив товаров в корзине;
+addItem(item: Product): void — добавляет товар в корзину;
+removeItem(item: Product): void — удаляет товар из корзины;
+clear(): void — очищает корзину;
+getTotal(): number — возвращает соимость всех товаров в корзине;
+getCount(): number — возвращает количество товаров в корзине;
+hasItem(id: string): boolean — проверяет наличие товара в корзине по его id.
+
+
+###### Класс BuyerModel
+Хранение и валидация данных покупателя.
+
+_payment: TPayment | null — выбранный способ оплаты;
+_address: string — адрес доставки;
+_email: string — электронная почта;
+_phone: string — номер телефона.
+
+setPayment(value: TPayment): void — сохраняет способ оплаты;
+setAddress(value: string): void — сохраняет адрес;
+setEmail(value: string): void — сохраняет email;
+setPhone(value: string): void — сохраняет телефон;
+getData(): Buyer — возвращает все данные покупателя;
+clear(): void — очищает все данные покупателя;
+validate(): Record<string, string> — валидация данных. Проверяет, что все поля не пустые.
+

@@ -166,3 +166,11 @@ getData(): Buyer — возвращает все данные покупател
 clear(): void — очищает все данные покупателя;
 validate(): Record<string, string> — валидация данных. Проверяет, что все поля не пустые.
 
+###### Клас AppAPI
+Взаимодействие с сервером: получение списка товаров
+
+constructor(api: Api) — предоставляет методы get и post для выполнения запросов.
+
+getProductList(): Promise<Product[]> - возвращает массив товаров
+postOrder(order: IOrder): Promise<OrderResult> - возвращает обшиую сумму заказа и массив айди товаров
+

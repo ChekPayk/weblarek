@@ -32,7 +32,7 @@ export interface ApiResponseList<T> {
     total: number;
     items: T[];
 }
-export interface IProductListResponse {
+export interface ProductListResponse {
     total: number;
     items: Product[];
 }

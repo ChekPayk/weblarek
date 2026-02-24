@@ -5,7 +5,7 @@ export interface IApi {
     post<T extends object>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
 }
 
-export type TPayment = 'online' | 'cash';
+export type TPayment = 'online' | 'cash' | "";
 export interface Product {
     id: string;
     description: string;
@@ -31,4 +31,8 @@ export interface OrderResult {
 export interface ApiResponseList<T> {
     total: number;
     items: T[];
+}
+export interface IProductListResponse {
+    total: number;
+    items: Product[];
 }

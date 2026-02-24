@@ -1,3 +1,5 @@
+import "./scss/styles.scss";
+
 import { CatalogModel } from "./components/base/Models/CatalogModel";
 import { BasketModel } from "./components/base/Models/BasketModel";
 import { BuyerModel } from "./components/base/Models/BuyerModel";

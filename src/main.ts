@@ -1,9 +1,12 @@
 import "./scss/styles.scss";
 
-import { CatalogModel } from "./components/base/Models/CatalogModel";
-import { BasketModel } from "./components/base/Models/BasketModel";
-import { BuyerModel } from "./components/base/Models/BuyerModel";
+import { CatalogModel } from "./components/Models/CatalogModel";
+import { BasketModel } from "./components/Models/BasketModel";
+import { BuyerModel } from "./components/Models/BuyerModel";
 import { apiProducts } from "./utils/data";
+import { AppAPI } from "./components/Models/AppAPI";
+import { Api } from "./components/base/Api";
+import { Product } from "./types/index";
 
 const catalog = new CatalogModel();
 console.log("1. Создан пустой каталог");
@@ -84,9 +87,26 @@ console.log("   Установлен телефон");
 console.log("   Текущие ошибки:", buyer.validate());
 
 console.log("\n4. Все данные покупателя:", buyer.getData());
-
-
 console.log("\n6. Очищаем данные покупателя");
 buyer.clearData();
 console.log("   После очистки:", buyer.getData());
 console.log("   Валидация после очистки:", buyer.validate());
+
+// Тестирование API
+const baseApi = new Api("http://localhost:3000/api/weblarek");
+const appApi = new AppAPI(baseApi);
+
+console.log("Выполняем запрос к серверу...");
+appApi
+  .getProductList()
+  .then((products: Product[]) => {
+    console.log("Данные получены от сервера");
+
+    catalog.setItems(products);
+    console.log("Каталог товаров (с сервера):", catalog.getItems());
+    console.log("Количество товаров:", catalog.getItems().length);
+    console.log("Первый товар:", catalog.getItems()[0]);
+  })
+  .catch((error: Error) => {
+    console.error("Ошибка при запросе к серверу:", error.message);
+  });

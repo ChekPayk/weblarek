@@ -32,7 +32,5 @@ export interface ApiResponseList<T> {
     total: number;
     items: T[];
 }
-export interface ProductListResponse {
-    total: number;
-    items: Product[];
-}
+
+export type ValidationErrors = Partial<Record<keyof Buyer, string>>;

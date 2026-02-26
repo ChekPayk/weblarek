@@ -1,4 +1,4 @@
-import { IApi, Product, Order, OrderResult, ProductListResponse } from '../../../types/index';
+import { IApi, Product, Order, OrderResult, ApiResponseList  } from '../../types/index';
 
 /**
  * Класс для коммуникации с сервером
@@ -11,7 +11,7 @@ export class AppAPI {
     }
 
     async getProductList(): Promise<Product[]> {
-        const response = await this._api.get<ProductListResponse>('/product/');
+        const response = await this._api.get<ApiResponseList<Product>>('/product/');
         return response.items;
     }
     async postOrder(order: Order): Promise<OrderResult> {

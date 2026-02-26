@@ -1,4 +1,4 @@
-import { Buyer, TPayment } from "../../../types";
+import { Buyer, TPayment, ValidationErrors } from "../../types";
 
 export class BuyerModel {
   private _payment: TPayment | null = null;
@@ -38,8 +38,8 @@ export class BuyerModel {
     this._phone = "";
   }
 
-  validate(): Record<string, string> {
-    const errors: Record<string, string> = {};
+  validate(): ValidationErrors {
+    const errors: ValidationErrors = {};
 
     if (!this._payment) {
       errors.payment = "Не выбран способ оплаты";

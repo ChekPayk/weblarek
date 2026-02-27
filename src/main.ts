@@ -7,6 +7,8 @@ import { apiProducts } from "./utils/data";
 import { AppAPI } from "./components/Models/AppAPI";
 import { Api } from "./components/base/Api";
 import { Product } from "./types/index";
+import { API_URL } from "./utils/constants";
+
 
 const catalog = new CatalogModel();
 console.log("1. Создан пустой каталог");
@@ -93,12 +95,11 @@ console.log("   После очистки:", buyer.getData());
 console.log("   Валидация после очистки:", buyer.validate());
 
 // Тестирование API
-const baseApi = new Api("http://localhost:3000/api/weblarek");
+const baseApi = new Api(API_URL);
 const appApi = new AppAPI(baseApi);
 
 console.log("Выполняем запрос к серверу...");
-appApi
-  .getProductList()
+appApi.getProductList()
   .then((products: Product[]) => {
     console.log("Данные получены от сервера");
 

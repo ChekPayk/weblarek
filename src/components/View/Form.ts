@@ -2,23 +2,23 @@
 // ├── Form (базовый для ВСЕХ форм)
 // │   ├── OrderForm (форма оплаты и адреса)
 // │   └── ContactsForm (форма email и телефона)
-import { Component } from '../base/Component';
-import { IEvents } from '../base/Events';
+import { Component } from "../base/Component";
+import { ensureElement } from "../../utils/utils";
 
 interface IFormData {
-    valid: boolean;
-    errors: string;
+  valid: boolean;
+  errors: string;
 }
 
 export class Form<T> extends Component<IFormData> {
     protected submitButton: HTMLButtonElement;
     protected errorsElement: HTMLElement;
 
-    constructor(container: HTMLFormElement, protected events: IEvents) {
+    constructor(container: HTMLFormElement, actions?: { onSubmit: (data: T) => void }) {
         super(container);
 
-        this.submitButton = container.querySelector('button[type="submit"]')!;
-        this.errorsElement = container.querySelector('.form__errors')!;
+        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.container);
+        this.errorsElement = ensureElement<HTMLElement>('.form__errors', this.container);
 
         container.addEventListener('input', (e: Event) => {
             const target = e.target as HTMLInputElement;
@@ -27,15 +27,16 @@ export class Form<T> extends Component<IFormData> {
 
         container.addEventListener('submit', (e: SubmitEvent) => {
             e.preventDefault();
-            this.events.emit(`${container.name}:submit`);
+            actions?.onSubmit?.(this.getData());
         });
     }
 
     protected onInputChange(name: string, value: string): void {
-        this.events.emit(`${(this.container as HTMLFormElement).name}.${name}:change`, {
-            field: name,
-            value
-        });
+        // Будет переопределено в наследниках
+    }
+
+    protected getData(): T {
+        return {} as T; // Переопределяется в наследниках
     }
 
     set valid(value: boolean) {

@@ -1,47 +1,79 @@
-import { Form } from './Form';
-import { TPayment } from '../../types';
-import { IEvents } from '../base/Events';
-
+import { Form } from "./Form";
+import { TPayment } from "../../types";
+import { ensureElement } from "../../utils/utils";
 
 interface IOrderFormData {
-    payment: TPayment;
-    address: string;
+  payment: TPayment;
+  address: string;
+}
+
+interface IOrderFormActions {
+  onSubmit: (data: { payment: TPayment; address: string }) => void;
 }
 
 export class OrderForm extends Form<IOrderFormData> {
-    protected onlineButton: HTMLButtonElement;
-    protected cashButton: HTMLButtonElement;
-    protected addressInput: HTMLInputElement;
+  protected onlineButton: HTMLButtonElement;
+  protected cashButton: HTMLButtonElement;
+  protected addressInput: HTMLInputElement;
 
-    constructor(container: HTMLFormElement, events: IEvents) {
-        super(container, events);
+  constructor(container: HTMLFormElement, actions: IOrderFormActions) {
+    super(container);
 
-        this.onlineButton = container.querySelector('button[name="card"]')!;
-        this.cashButton = container.querySelector('button[name="cash"]')!;
-        this.addressInput = container.querySelector('input[name="address"]')!;
+    this.onlineButton = ensureElement<HTMLButtonElement>(
+      'button[name="card"]',
+      this.container,
+    );
+    this.cashButton = ensureElement<HTMLButtonElement>(
+      'button[name="cash"]',
+      this.container,
+    );
+    this.addressInput = ensureElement<HTMLInputElement>(
+      'input[name="address"]',
+      this.container,
+    );
 
-        this.onlineButton.addEventListener('click', () => {
-            this.selectPayment('online');
-            this.events.emit('order:payment-change', { payment: 'online' });
-        });
+    this.onlineButton.addEventListener("click", () => {
+      this.selectPayment("online");
+    });
 
-        this.cashButton.addEventListener('click', () => {
-            this.selectPayment('cash');
-            this.events.emit('order:payment-change', { payment: 'cash' });
-        });
+    this.cashButton.addEventListener("click", () => {
+      this.selectPayment("cash");
+    });
 
-        this.addressInput.addEventListener('input', (e) => {
-            const target = e.target as HTMLInputElement;
-            this.events.emit('order:address-change', { address: target.value });
-        });
-    }
+    this.addressInput.addEventListener("input", () => {
+      this.onInputChange("address", this.addressInput.value);
+    });
 
-    private selectPayment(payment: TPayment): void {
-        this.onlineButton.classList.toggle('button_alt-active', payment === 'online');
-        this.cashButton.classList.toggle('button_alt-active', payment === 'cash');
-    }
+    container.addEventListener("submit", (e) => {
+      e.preventDefault();
+      actions.onSubmit({
+        payment: this.getPayment(),
+        address: this.addressInput.value,
+      });
+    });
+  }
 
-    set address(value: string) {
-        this.addressInput.value = value;
-    }
+  private selectPayment(payment: TPayment): void {
+    this.onlineButton.classList.toggle(
+      "button_alt-active",
+      payment === "online",
+    );
+    this.cashButton.classList.toggle("button_alt-active", payment === "cash");
+    this.onInputChange("payment", payment);
+  }
+
+  private getPayment(): TPayment {
+    if (this.onlineButton.classList.contains("button_alt-active"))
+      return "online";
+    if (this.cashButton.classList.contains("button_alt-active")) return "cash";
+    return "";
+  }
+
+  set address(value: string) {
+    this.addressInput.value = value;
+  }
+
+  protected onInputChange(name: string, value: string): void {
+    // Для совместимости с родительским классом
+  }
 }

@@ -1,37 +1,51 @@
-import { Card } from './Card';
-import { IEvents } from '../base/Events';
-import { categoryMap } from '../../utils/constants';
+import { Card } from "./Card";
+import { Product } from "../../types";
+import { categoryMap } from "../../utils/constants";
+import { ensureElement } from "../../utils/utils";
 
 interface ICardCatalogData {
-    title: string;
-    price: number | null;
-    category: string;
-    image: string;
+  title: string;
+  price: number | null;
+  category: string;
+  image: string;
 }
 
-export class CardCatalog extends Card<ICardCatalogData> {
-    protected categoryElement: HTMLElement;
-    protected imageElement: HTMLImageElement;
+type CategoryKey = keyof typeof categoryMap;
+export type TCardCatalog = Pick<Product, "image" | "category">;
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
+export class CardCatalog extends Card<TCardCatalog> {
+  protected imageElement: HTMLImageElement;
+  protected categoryElement: HTMLElement;
 
-        this.categoryElement = container.querySelector('.card__category')!;
-        this.imageElement = container.querySelector('.card__image')!;
+  constructor(container: HTMLElement, actions?: { onClick: () => void }) {
+    super(container);
 
-        container.addEventListener('click', () => {
-            this.events.emit('card:select', { id: this.id });
-        });
+    this.categoryElement = ensureElement<HTMLElement>(
+      ".card__category",
+      this.container,
+    );
+    this.imageElement = ensureElement<HTMLImageElement>(
+      ".card__image",
+      this.container,
+    );
+
+    if (actions?.onClick) {
+      container.addEventListener("click", actions.onClick);
     }
+  }
 
-    set category(value: string) {
-        this.categoryElement.textContent = value;
-        const categoryClass = categoryMap[value as keyof typeof categoryMap] || 'card__category_other';
-        this.categoryElement.className = `card__category ${categoryClass}`;
-    }
+  set category(value: string) {
+    this.categoryElement.textContent = value;
 
-    set image(value: string) {
-        this.imageElement.src = value;
-        this.imageElement.alt = this.title;
+    for (const key in categoryMap) {
+      this.categoryElement.classList.toggle(
+        categoryMap[key as CategoryKey],
+        key === value,
+      );
     }
+  }
+
+  set image(value: string) {
+    this.setImage(this.imageElement, value, this.title);
+  }
 }

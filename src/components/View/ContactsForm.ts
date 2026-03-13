@@ -1,37 +1,57 @@
-import { Form } from './Form';
-import { IEvents } from '../base/Events';
+import { Form } from "./Form";
+import { ensureElement } from "../../utils/utils";
 
 interface IContactsFormData {
-    email: string;
-    phone: string;
+  email: string;
+  phone: string;
+}
+
+interface IContactsFormActions {
+  onSubmit: (data: { email: string; phone: string }) => void;
 }
 
 export class ContactsForm extends Form<IContactsFormData> {
-    protected emailInput: HTMLInputElement;
-    protected phoneInput: HTMLInputElement;
+  protected emailInput: HTMLInputElement;
+  protected phoneInput: HTMLInputElement;
 
-    constructor(container: HTMLFormElement, events: IEvents) {
-        super(container, events);
+  constructor(container: HTMLFormElement, actions: IContactsFormActions) {
+    super(container);
 
-        this.emailInput = container.querySelector('input[name="email"]')!;
-        this.phoneInput = container.querySelector('input[name="phone"]')!;
+    this.emailInput = ensureElement<HTMLInputElement>(
+      'input[name="email"]',
+      this.container,
+    );
+    this.phoneInput = ensureElement<HTMLInputElement>(
+      'input[name="phone"]',
+      this.container,
+    );
 
-        this.emailInput.addEventListener('input', (e) => {
-            const target = e.target as HTMLInputElement;
-            this.events.emit('contacts:email-change', { email: target.value });
-        });
+    this.emailInput.addEventListener("input", () => {
+      this.onInputChange("email", this.emailInput.value);
+    });
 
-        this.phoneInput.addEventListener('input', (e) => {
-            const target = e.target as HTMLInputElement;
-            this.events.emit('contacts:phone-change', { phone: target.value });
-        });
-    }
+    this.phoneInput.addEventListener("input", () => {
+      this.onInputChange("phone", this.phoneInput.value);
+    });
 
-    set email(value: string) {
-        this.emailInput.value = value;
-    }
+    container.addEventListener("submit", (e) => {
+      e.preventDefault();
+      actions.onSubmit({
+        email: this.emailInput.value,
+        phone: this.phoneInput.value,
+      });
+    });
+  }
 
-    set phone(value: string) {
-        this.phoneInput.value = value;
-    }
+  set email(value: string) {
+    this.emailInput.value = value;
+  }
+
+  set phone(value: string) {
+    this.phoneInput.value = value;
+  }
+
+  protected onInputChange(name: string, value: string): void {
+    // Для совместимости с родительским классом
+  }
 }

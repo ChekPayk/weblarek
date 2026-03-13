@@ -10,7 +10,9 @@ export class Gallery extends Component<IGalleryData> {
 
     constructor(container: HTMLElement) {
         super(container);
-        this.galleryElement = ensureElement<HTMLElement>('.gallery', this.container);
+        this.galleryElement = container.classList.contains('gallery') 
+            ? container 
+            : ensureElement<HTMLElement>('.gallery', container);
     }
 
     set catalog(items: HTMLElement[]) {

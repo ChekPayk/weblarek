@@ -1,5 +1,4 @@
 import "./scss/styles.scss";
-import { TPayment } from "../src/types";
 
 // Модели
 import { CatalogModel } from "./components/Models/CatalogModel";
@@ -137,33 +136,112 @@ events.on("basket:open", () => {
   });
 });
 
-// Начало оформления заказа
+// Начало оформления заказа (первый шаг - способ оплаты и адрес)
 events.on("order:start", () => {
   const orderForm = new OrderForm(cloneTemplate(orderTemplate), {
-    onSubmit: (data) => {
+    onSubmit: (data: { payment: "online" | "cash"; address: string }) => {
       buyerModel.setPayment(data.payment);
       buyerModel.setAddress(data.address);
       events.emit("contacts:start");
     },
   });
 
+  // Функция валидации формы заказа
+  const validateOrderForm = () => {
+    const payment = orderForm.getPayment();
+    const address = orderForm.getAddress();
+
+    const errors: string[] = [];
+
+    const form = orderForm.render() as HTMLFormElement;
+    const onlineBtn = form.querySelector('button[name="card"]');
+    const cashBtn = form.querySelector('button[name="cash"]');
+
+    const isPaymentSelected =
+      onlineBtn?.classList.contains("button_alt-active") ||
+      cashBtn?.classList.contains("button_alt-active");
+
+    if (!isPaymentSelected) {
+      errors.push("Выберите способ оплаты");
+    }
+
+    if (!address.trim()) {
+      errors.push("Введите адрес доставки");
+    }
+
+    const isValid = errors.length === 0;
+    orderForm.valid = isValid;
+    orderForm.errors = errors.join(", ");
+  };
+
+  // Добавляем обработчики для валидации
+  setTimeout(() => {
+    const form = orderForm.render() as HTMLFormElement;
+    const onlineBtn = form.querySelector('button[name="card"]');
+    const cashBtn = form.querySelector('button[name="cash"]');
+    const addressInput = form.querySelector('input[name="address"]');
+    onlineBtn?.addEventListener("click", validateOrderForm);
+    cashBtn?.addEventListener("click", validateOrderForm);
+    addressInput?.addEventListener("input", validateOrderForm);
+
+    // Первоначальная валидация
+    validateOrderForm();
+  }, 0);
+
   modal.render({
     content: orderForm.render({
-      payment: "" as TPayment,
+      payment: "" as "online" | "cash" | "",
       address: "",
     }),
   });
 });
 
-// Форма контактов
+// Форма контактов (второй шаг - email и телефон)
 events.on("contacts:start", () => {
   const contactsForm = new ContactsForm(cloneTemplate(contactsTemplate), {
-    onSubmit: (data) => {
+    onSubmit: (data: { email: string; phone: string }) => {
       buyerModel.setEmail(data.email);
       buyerModel.setPhone(data.phone);
       events.emit("order:complete");
     },
   });
+
+  // Функция валидации формы контактов
+  const validateContactsForm = () => {
+    const email = contactsForm.getEmail();
+    const phone = contactsForm.getPhone();
+
+    const errors: string[] = [];
+
+    if (!email.trim()) {
+      errors.push("Введите email");
+    } else if (!email.includes("@") || !email.includes(".")) {
+      errors.push("Введите корректный email");
+    }
+
+    if (!phone.trim()) {
+      errors.push("Введите телефон");
+    } else if (phone.replace(/\D/g, "").length < 10) {
+      errors.push("Введите корректный телефон");
+    }
+
+    const isValid = errors.length === 0;
+    contactsForm.valid = isValid;
+    contactsForm.errors = errors.join(", ");
+  };
+
+  // Добавляем обработчики для валидации
+  setTimeout(() => {
+    const form = contactsForm.render() as HTMLFormElement;
+    const emailInput = form.querySelector('input[name="email"]');
+    const phoneInput = form.querySelector('input[name="phone"]');
+
+    emailInput?.addEventListener("input", validateContactsForm);
+    phoneInput?.addEventListener("input", validateContactsForm);
+
+    // Первоначальная валидация
+    validateContactsForm();
+  }, 0);
 
   modal.render({
     content: contactsForm.render({
@@ -198,6 +276,11 @@ events.on("order:complete", () => {
     .catch((err) => {
       console.error("Ошибка при оформлении заказа:", err);
     });
+});
+
+// Закрытие модального окна
+events.on("modal:close", () => {
+  modal.close();
 });
 
 // ============================================

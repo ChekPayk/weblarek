@@ -11,45 +11,52 @@ interface IFormData {
 }
 
 export class Form<T> extends Component<IFormData> {
-    protected submitButton: HTMLButtonElement;
-    protected errorsElement: HTMLElement;
+  protected submitButton: HTMLButtonElement;
+  protected errorsElement: HTMLElement;
 
-    constructor(container: HTMLFormElement, actions?: { onSubmit: (data: T) => void }) {
-        super(container);
+  constructor(
+    container: HTMLFormElement,
+    actions?: { onSubmit: (data: T) => void },
+  ) {
+    super(container);
 
-        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.container);
-        this.errorsElement = ensureElement<HTMLElement>('.form__errors', this.container);
+    this.submitButton = ensureElement<HTMLButtonElement>(
+      'button[type="submit"]',
+      this.container,
+    );
+    this.errorsElement = ensureElement<HTMLElement>(
+      ".form__errors",
+      this.container,
+    );
 
-        container.addEventListener('input', (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            this.onInputChange(target.name, target.value);
-        });
+    container.addEventListener("input", (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      this.onInputChange(target.name, target.value);
+    });
 
-        container.addEventListener('submit', (e: SubmitEvent) => {
-            e.preventDefault();
-            actions?.onSubmit?.(this.getData());
-        });
-    }
+    container.addEventListener("submit", (e: SubmitEvent) => {
+      e.preventDefault();
+      actions?.onSubmit?.(this.getData());
+    });
+  }
 
-    protected onInputChange(name: string, value: string): void {
-        // Будет переопределено в наследниках
-    }
+  protected onInputChange(name: string, value: string): void {
+    // Будет переопределено в наследниках
+  }
 
-    protected getData(): T {
-        return {} as T; // Переопределяется в наследниках
-    }
+  protected getData(): T {
+    return {} as T; // Переопределяется в наследниках
+  }
 
-    set valid(value: boolean) {
-        this.submitButton.disabled = !value;
-    }
+  set valid(value: boolean) {
+    this.submitButton.disabled = !value;
+  }
 
-    set errors(value: string) {
-        this.errorsElement.textContent = value;
-    }
+  set errors(value: string) {
+    this.errorsElement.textContent = value;
+  }
 
-    render(data?: Partial<T>): HTMLElement {
-        const form = super.render(data) as HTMLFormElement;
-        form.reset();
-        return form;
-    }
+  render(data?: Partial<T>): HTMLElement {
+    return super.render(data);
+  }
 }

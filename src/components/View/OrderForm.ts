@@ -8,7 +8,7 @@ interface IOrderFormData {
 }
 
 interface IOrderFormActions {
-  onSubmit: (data: { payment: TPayment; address: string }) => void;
+  onSubmit: (data: { payment: "online" | "cash"; address: string }) => void;
 }
 
 export class OrderForm extends Form<IOrderFormData> {
@@ -62,11 +62,15 @@ export class OrderForm extends Form<IOrderFormData> {
     this.onInputChange("payment", payment);
   }
 
-  private getPayment(): TPayment {
+  public getPayment(): "online" | "cash" {
     if (this.onlineButton.classList.contains("button_alt-active"))
       return "online";
     if (this.cashButton.classList.contains("button_alt-active")) return "cash";
-    return "";
+    return "online";
+  }
+
+  public getAddress(): string {
+    return this.addressInput.value;
   }
 
   set address(value: string) {

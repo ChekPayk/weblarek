@@ -43,6 +43,14 @@ export class ContactsForm extends Form<IContactsFormData> {
     });
   }
 
+  getEmail(): string {
+    return this.emailInput.value;
+  }
+
+  getPhone(): string {
+    return this.phoneInput.value;
+  }
+
   set email(value: string) {
     this.emailInput.value = value;
   }

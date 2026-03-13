@@ -1,4 +1,3 @@
-// src/components/View/Modal.ts
 import { Component } from '../base/Component';
 
 interface IModalData {

@@ -1,4 +1,3 @@
-// src/components/View/Success.ts
 import { Component } from '../base/Component';
 
 interface ISuccessData {

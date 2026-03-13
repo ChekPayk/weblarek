@@ -1,4 +1,3 @@
-// src/components/View/Header.ts
 import { Component } from '../base/Component';
 
 interface IHeaderData {

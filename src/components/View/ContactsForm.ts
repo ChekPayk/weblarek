@@ -1,5 +1,5 @@
-// src/components/View/ContactsForm.ts
 import { Form } from './Form';
+import { IEvents } from '../base/Events';
 
 interface IContactsFormData {
     email: string;
@@ -10,11 +10,21 @@ export class ContactsForm extends Form<IContactsFormData> {
     protected emailInput: HTMLInputElement;
     protected phoneInput: HTMLInputElement;
 
-    constructor(container: HTMLFormElement) {
-        super(container);
+    constructor(container: HTMLFormElement, events: IEvents) {
+        super(container, events);
 
         this.emailInput = container.querySelector('input[name="email"]')!;
         this.phoneInput = container.querySelector('input[name="phone"]')!;
+
+        this.emailInput.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            this.events.emit('contacts:email-change', { email: target.value });
+        });
+
+        this.phoneInput.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            this.events.emit('contacts:phone-change', { phone: target.value });
+        });
     }
 
     set email(value: string) {
@@ -23,13 +33,5 @@ export class ContactsForm extends Form<IContactsFormData> {
 
     set phone(value: string) {
         this.phoneInput.value = value;
-    }
-
-    protected onInputChange(name: string, value: string): void {
-        if (name === 'email') {
-            this.email = value;
-        } else if (name === 'phone') {
-            this.phone = value;
-        }
     }
 }

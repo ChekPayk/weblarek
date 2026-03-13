@@ -1,4 +1,3 @@
-// src/components/View/Basket.ts
 import { Component } from '../base/Component';
 
 interface IBasketData {

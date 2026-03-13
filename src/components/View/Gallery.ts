@@ -1,4 +1,3 @@
-// src/components/View/Gallery.ts
 import { Component } from '../base/Component';
 
 interface IGalleryData {

@@ -174,3 +174,148 @@ constructor(api: Api) — предоставляет методы get и post д
 getProductList(): Promise<Product[]> - возвращает массив товаров
 postOrder(order: IOrder): Promise<OrderResult> - возвращает обшиую сумму заказа и массив айди товаров
 
+###### Слой представления (View)
+Наследуются от базового класса Component и отвечают только за отображение данных: не хранят данные и не содержат логики, только генерируют события о действиях пользователя.
+
+
+Класс Header
+Отвечает за отображение шапки сайта с корзиной и счетчиком товаров.
+
+basketCounter: HTMLElement — элемент для отображения количества товаров
+basketButton: HTMLButtonElement — кнопка открытия корзины
+counter(value: number): void — устанавливает значение счетчика
+basket:open — генерируется при клике на иконку корзины
+
+
+Класс Gallery
+Отвечает за отображение каталога товаров на главной странице.
+
+galleryElement: HTMLElement — контейнер для карточек товаров
+catalog(items: HTMLElement[]): void — отображает массив карточек товаров
+
+
+Класс Card (абстрактный)
+Базовый класс для всех типов карточек товара.
+
+titleElement: HTMLElement — элемент для названия товара
+priceElement: HTMLElement — элемент для цены товара
+title(value: string): void — устанавливает название товара
+price(value: number | null): void — устанавливает цену товара
+
+
+Класс CardCatalog (наследуется от Card)
+Карточка товара для отображения в каталоге.
+
+categoryElement: HTMLElement — элемент для категории товара
+imageElement: HTMLImageElement — элемент для изображения товара
+category(value: string): void — устанавливает категорию и соответствующий CSS-класс
+image(value: string): void — устанавливает изображение
+card:select — генерируется при клике на карточку (через колбэк onClick)
+
+
+Класс CardPreview (наследуется от Card)
+Карточка товара для отображения в модальном окне с детальной информацией.
+
+categoryElement: HTMLElement — элемент для категории товара
+imageElement: HTMLImageElement — элемент для изображения товара
+descriptionElement: HTMLElement — элемент для описания товара
+buttonElement: HTMLButtonElement — кнопка действия
+category(value: string): void — устанавливает категорию и CSS-класс
+image(value: string): void — устанавливает изображение
+description(value: string): void — устанавливает описание
+inBasket(value: boolean): void — меняет текст кнопки в зависимости от наличия в корзине
+card:action — генерируется при клике на кнопку (через колбэк onAction)
+
+
+Класс CardBasket (наследуется от Card)
+Карточка товара для отображения в корзине.
+
+indexElement: HTMLElement — элемент для порядкового номера
+deleteButton: HTMLButtonElement — кнопка удаления из корзины
+index(value: number): void — устанавливает порядковый номер товара
+basket:remove — генерируется при клике на кнопку удаления (через колбэк onDelete)
+
+
+Класс Basket
+Отвечает за отображение корзины с товарами.
+
+listElement: HTMLElement — список товаров
+totalElement: HTMLElement — элемент для общей суммы
+buttonElement: HTMLButtonElement — кнопка оформления заказа
+items(items: HTMLElement[]): void — отображает список товаров
+total(value: number): void — устанавливает общую сумму
+valid(value: boolean): void — активирует/деактивирует кнопку оформления
+order:start — генерируется при клике на кнопку оформления (через колбэк onSubmit)
+
+
+Класс Form
+Базовый класс для всех форм.
+
+submitButton: HTMLButtonElement — кнопка отправки формы
+errorsElement: HTMLElement — элемент для отображения ошибок
+valid(value: boolean): void — активирует/деактивирует кнопку отправки
+errors(value: string): void — устанавливает текст ошибки
+[formName].[fieldName]:change — генерируется при изменении поля формы
+
+
+Класс OrderForm (наследуется от Form)
+Форма для ввода способа оплаты и адреса доставки.
+
+onlineButton: HTMLButtonElement — кнопка выбора оплаты онлайн
+cashButton: HTMLButtonElement — кнопка выбора оплаты при получении
+addressInput: HTMLInputElement — поле ввода адреса
+address(value: string): void — устанавливает значение поля адреса
+order.payment:change — генерируется при выборе способа оплаты
+order.address:change — генерируется при вводе адреса
+
+
+Класс ContactsForm (наследуется от Form)
+Форма для ввода email и телефона.
+
+emailInput: HTMLInputElement — поле ввода email
+phoneInput: HTMLInputElement — поле ввода телефона
+email(value: string): void — устанавливает значение email
+phone(value: string): void — устанавливает значение телефона
+contacts.email:change — генерируется при вводе email
+contacts.phone:change — генерируется при вводе телефона
+
+
+Класс Modal
+Отвечает за отображение модального окна.
+
+closeButton: HTMLButtonElement — кнопка закрытия
+contentElement: HTMLElement — контейнер для контента
+content(value: HTMLElement): void — устанавливает содержимое модального окна
+open(): void — открывает модальное окно
+close(): void — закрывает модальное окно и очищает содержимое
+
+
+Класс Success
+Отвечает за отображение окна успешного заказа.
+
+descriptionElement: HTMLElement — элемент с описанием
+closeButton: HTMLButtonElement — кнопка закрытия
+total(value: number): void — устанавливает сумму списания
+success:close — генерируется при клике на кнопку закрытия 
+
+
+События приложения
+
+События моделей
+catalog:changed — изменение каталога товаров
+basket:changed — изменение состава корзины
+buyer:changed — изменение данных покупателя
+
+События представления
+basket:open — открытие корзины
+card:select — выбор карточки товара
+card:action — действие с карточкой (добавить/удалить)
+basket:remove — удаление товара из корзины
+order:start — начало оформления заказа
+order.payment:change — изменение способа оплаты
+order.address:change — изменение адреса
+contacts.email:change — изменение email
+contacts.phone:change — изменение телефона
+order:submit — отправка формы заказа
+contacts:submit — отправка формы контактов
+modal:close — закрытие модального окна

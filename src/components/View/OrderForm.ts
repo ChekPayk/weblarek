@@ -1,14 +1,10 @@
 import { Form } from "./Form";
-import { TPayment } from "../../types";
+import { IEvents } from "../base/Events";
 import { ensureElement } from "../../utils/utils";
 
 interface IOrderFormData {
-  payment: TPayment;
+  payment: "online" | "cash" | "";
   address: string;
-}
-
-interface IOrderFormActions {
-  onSubmit: (data: { payment: "online" | "cash"; address: string }) => void;
 }
 
 export class OrderForm extends Form<IOrderFormData> {
@@ -16,8 +12,8 @@ export class OrderForm extends Form<IOrderFormData> {
   protected cashButton: HTMLButtonElement;
   protected addressInput: HTMLInputElement;
 
-  constructor(container: HTMLFormElement, actions: IOrderFormActions) {
-    super(container);
+  constructor(container: HTMLFormElement, events: IEvents) {
+    super(container, events);
 
     this.onlineButton = ensureElement<HTMLButtonElement>(
       'button[name="card"]',
@@ -34,50 +30,30 @@ export class OrderForm extends Form<IOrderFormData> {
 
     this.onlineButton.addEventListener("click", () => {
       this.selectPayment("online");
+      this.events.emit("order.payment:change", { value: "online" });
     });
 
     this.cashButton.addEventListener("click", () => {
       this.selectPayment("cash");
+      this.events.emit("order.payment:change", { value: "cash" });
     });
 
     this.addressInput.addEventListener("input", () => {
-      this.onInputChange("address", this.addressInput.value);
-    });
-
-    container.addEventListener("submit", (e) => {
-      e.preventDefault();
-      actions.onSubmit({
-        payment: this.getPayment(),
-        address: this.addressInput.value,
+      this.events.emit("order.address:change", {
+        value: this.addressInput.value,
       });
     });
   }
 
-  private selectPayment(payment: TPayment): void {
+  private selectPayment(payment: "online" | "cash"): void {
     this.onlineButton.classList.toggle(
       "button_alt-active",
       payment === "online",
     );
     this.cashButton.classList.toggle("button_alt-active", payment === "cash");
-    this.onInputChange("payment", payment);
-  }
-
-  public getPayment(): "online" | "cash" {
-    if (this.onlineButton.classList.contains("button_alt-active"))
-      return "online";
-    if (this.cashButton.classList.contains("button_alt-active")) return "cash";
-    return "online";
-  }
-
-  public getAddress(): string {
-    return this.addressInput.value;
   }
 
   set address(value: string) {
     this.addressInput.value = value;
-  }
-
-  protected onInputChange(name: string, value: string): void {
-    // Для совместимости с родительским классом
   }
 }

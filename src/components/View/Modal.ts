@@ -35,13 +35,11 @@ export class Modal extends Component<IModalData> {
 
   open() {
     this.container.classList.add("modal_active");
-    this.events.emit("modal:open");
   }
 
   close() {
     this.container.classList.remove("modal_active");
-    this.content = document.createElement("div");
-    this.events.emit("modal:close");
+    this.contentElement.replaceChildren();
   }
 
   render(data?: IModalData): HTMLElement {

@@ -55,10 +55,21 @@ const orderTemplate = ensureElement<HTMLTemplateElement>("#order");
 const contactsTemplate = ensureElement<HTMLTemplateElement>("#contacts");
 const successTemplate = ensureElement<HTMLTemplateElement>("#success");
 
-// Компоненты представления
+// Компоненты представления (создаем однократно)
 const header = new Header(headerElement, events);
 const gallery = new Gallery(galleryElement);
 const modal = new Modal(modalContainer, events);
+const basket = new Basket(cloneTemplate(basketTemplate), events, {
+  onSubmit: () => events.emit("order:start"),
+});
+const orderForm = new OrderForm(cloneTemplate(orderTemplate), events);
+const contactsForm = new ContactsForm(cloneTemplate(contactsTemplate), events);
+const success = new Success(cloneTemplate(successTemplate), {
+  onClick: () => modal.close(),
+});
+
+// Переменная для отслеживания текущей открытой формы
+let currentForm: "order" | "contacts" | null = null;
 
 // ============================================
 // ОБРАБОТЧИКИ СОБЫТИЙ
@@ -80,9 +91,32 @@ events.on("catalog:changed", () => {
   gallery.render({ catalog: items });
 });
 
-// Корзина изменилась - обновляем счетчик
+// Корзина изменилась - обновляем счетчик и содержимое корзины
 events.on("basket:changed", () => {
   header.counter = basketModel.getCount();
+
+  // Обновляем содержимое корзины
+  const items = basketModel.getItems().map((item, index) => {
+    const card = new CardBasket(cloneTemplate(cardBasketTemplate), {
+      onDelete: () => events.emit("basket:remove", item),
+    });
+
+    return card.render({
+      ...item,
+      index: index + 1,
+    });
+  });
+
+  basket.render({
+    items,
+    total: basketModel.getTotal(),
+    valid: basketModel.getCount() > 0,
+  });
+});
+
+// Удаление товара из корзины
+events.on("basket:remove", (item: Product) => {
+  basketModel.removeItem(item);
 });
 
 // Выбрана карточка товара
@@ -112,147 +146,88 @@ events.on("card:action", (item: Product) => {
 
 // Открытие корзины
 events.on("basket:open", () => {
-  const basket = new Basket(cloneTemplate(basketTemplate), {
-    onSubmit: () => events.emit("order:start"),
-  });
-
-  const items = basketModel.getItems().map((item, index) => {
-    const card = new CardBasket(cloneTemplate(cardBasketTemplate), {
-      onDelete: () => basketModel.removeItem(item),
-    });
-
-    return card.render({
-      ...item,
-      index: index + 1,
-    });
-  });
-
+  currentForm = null;
   modal.render({
-    content: basket.render({
-      items,
-      total: basketModel.getTotal(),
-      valid: basketModel.getCount() > 0,
-    }),
+    content: basket.render(),
   });
 });
 
-// Начало оформления заказа (первый шаг - способ оплаты и адрес)
+// Изменение полей формы заказа
+events.on("order.payment:change", (data: { value: "online" | "cash" }) => {
+  buyerModel.setPayment(data.value);
+});
+
+events.on("order.address:change", (data: { value: string }) => {
+  buyerModel.setAddress(data.value);
+});
+
+// Изменение полей формы контактов
+events.on("contacts.email:change", (data: { value: string }) => {
+  buyerModel.setEmail(data.value);
+});
+
+events.on("contacts.phone:change", (data: { value: string }) => {
+  buyerModel.setPhone(data.value);
+});
+
+// Валидация при изменении данных покупателя
+events.on("buyer:changed", () => {
+  const errors = buyerModel.validate();
+
+  // Обновляем валидацию в зависимости от текущей открытой формы
+  if (currentForm === "order") {
+    orderForm.valid = !errors.payment && !errors.address;
+    orderForm.errors = [errors.payment, errors.address]
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  if (currentForm === "contacts") {
+    contactsForm.valid = !errors.email && !errors.phone;
+    contactsForm.errors = [errors.email, errors.phone]
+      .filter(Boolean)
+      .join(", ");
+  }
+});
+
+// Начало оформления заказа (первый шаг)
 events.on("order:start", () => {
-  const orderForm = new OrderForm(cloneTemplate(orderTemplate), {
-    onSubmit: (data: { payment: "online" | "cash"; address: string }) => {
-      buyerModel.setPayment(data.payment);
-      buyerModel.setAddress(data.address);
-      events.emit("contacts:start");
-    },
-  });
+  currentForm = "order";
 
-  // Функция валидации формы заказа
-  const validateOrderForm = () => {
-    const payment = orderForm.getPayment();
-    const address = orderForm.getAddress();
-
-    const errors: string[] = [];
-
-    const form = orderForm.render() as HTMLFormElement;
-    const onlineBtn = form.querySelector('button[name="card"]');
-    const cashBtn = form.querySelector('button[name="cash"]');
-
-    const isPaymentSelected =
-      onlineBtn?.classList.contains("button_alt-active") ||
-      cashBtn?.classList.contains("button_alt-active");
-
-    if (!isPaymentSelected) {
-      errors.push("Выберите способ оплаты");
-    }
-
-    if (!address.trim()) {
-      errors.push("Введите адрес доставки");
-    }
-
-    const isValid = errors.length === 0;
-    orderForm.valid = isValid;
-    orderForm.errors = errors.join(", ");
-  };
-
-  // Добавляем обработчики для валидации
-  setTimeout(() => {
-    const form = orderForm.render() as HTMLFormElement;
-    const onlineBtn = form.querySelector('button[name="card"]');
-    const cashBtn = form.querySelector('button[name="cash"]');
-    const addressInput = form.querySelector('input[name="address"]');
-    onlineBtn?.addEventListener("click", validateOrderForm);
-    cashBtn?.addEventListener("click", validateOrderForm);
-    addressInput?.addEventListener("input", validateOrderForm);
-
-    // Первоначальная валидация
-    validateOrderForm();
-  }, 0);
+  // Сбрасываем ошибки при открытии формы
+  const errors = buyerModel.validate();
+  orderForm.valid = !errors.payment && !errors.address;
+  orderForm.errors = [errors.payment, errors.address]
+    .filter(Boolean)
+    .join(", ");
 
   modal.render({
     content: orderForm.render({
-      payment: "" as "online" | "cash" | "",
-      address: "",
+      payment: buyerModel.getData().payment || "",
+      address: buyerModel.getData().address || "",
     }),
   });
 });
 
-// Форма контактов (второй шаг - email и телефон)
-events.on("contacts:start", () => {
-  const contactsForm = new ContactsForm(cloneTemplate(contactsTemplate), {
-    onSubmit: (data: { email: string; phone: string }) => {
-      buyerModel.setEmail(data.email);
-      buyerModel.setPhone(data.phone);
-      events.emit("order:complete");
-    },
-  });
+// Переход к форме контактов (после успешной валидации первого шага)
+events.on("order:submit", () => {
+  currentForm = "contacts";
 
-  // Функция валидации формы контактов
-  const validateContactsForm = () => {
-    const email = contactsForm.getEmail();
-    const phone = contactsForm.getPhone();
-
-    const errors: string[] = [];
-
-    if (!email.trim()) {
-      errors.push("Введите email");
-    } else if (!email.includes("@") || !email.includes(".")) {
-      errors.push("Введите корректный email");
-    }
-
-    if (!phone.trim()) {
-      errors.push("Введите телефон");
-    } else if (phone.replace(/\D/g, "").length < 10) {
-      errors.push("Введите корректный телефон");
-    }
-
-    const isValid = errors.length === 0;
-    contactsForm.valid = isValid;
-    contactsForm.errors = errors.join(", ");
-  };
-
-  // Добавляем обработчики для валидации
-  setTimeout(() => {
-    const form = contactsForm.render() as HTMLFormElement;
-    const emailInput = form.querySelector('input[name="email"]');
-    const phoneInput = form.querySelector('input[name="phone"]');
-
-    emailInput?.addEventListener("input", validateContactsForm);
-    phoneInput?.addEventListener("input", validateContactsForm);
-
-    // Первоначальная валидация
-    validateContactsForm();
-  }, 0);
+  // Сбрасываем ошибки при открытии формы
+  const errors = buyerModel.validate();
+  contactsForm.valid = !errors.email && !errors.phone;
+  contactsForm.errors = [errors.email, errors.phone].filter(Boolean).join(", ");
 
   modal.render({
     content: contactsForm.render({
-      email: "",
-      phone: "",
+      email: buyerModel.getData().email || "",
+      phone: buyerModel.getData().phone || "",
     }),
   });
 });
 
 // Завершение заказа
-events.on("order:complete", () => {
+events.on("contacts:submit", () => {
   const order: Order = {
     ...buyerModel.getData(),
     items: basketModel.getItems().map((item) => item.id),
@@ -265,12 +240,10 @@ events.on("order:complete", () => {
       basketModel.clear();
       buyerModel.clearData();
 
-      const success = new Success(cloneTemplate(successTemplate), {
-        onClick: () => modal.close(),
-      });
-
+      currentForm = null;
+      success.render({ total: result.total });
       modal.render({
-        content: success.render({ total: result.total }),
+        content: success.render(),
       });
     })
     .catch((err) => {
@@ -280,6 +253,7 @@ events.on("order:complete", () => {
 
 // Закрытие модального окна
 events.on("modal:close", () => {
+  currentForm = null;
   modal.close();
 });
 

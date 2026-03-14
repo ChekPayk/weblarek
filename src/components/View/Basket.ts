@@ -1,4 +1,5 @@
 import { Component } from "../base/Component";
+import { IEvents } from "../base/Events";
 import { ensureElement } from "../../utils/utils";
 
 interface IBasketData {
@@ -7,12 +8,20 @@ interface IBasketData {
   valid: boolean;
 }
 
+interface IBasketActions {
+  onSubmit: () => void;
+}
+
 export class Basket extends Component<IBasketData> {
   protected listElement: HTMLElement;
   protected totalElement: HTMLElement;
   protected buttonElement: HTMLButtonElement;
 
-  constructor(container: HTMLElement, actions?: { onSubmit: () => void }) {
+  constructor(
+    container: HTMLElement,
+    protected events: IEvents,
+    actions?: IBasketActions,
+  ) {
     super(container);
 
     this.listElement = ensureElement<HTMLElement>(

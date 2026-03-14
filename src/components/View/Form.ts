@@ -4,6 +4,7 @@
 // │   └── ContactsForm (форма email и телефона)
 import { Component } from "../base/Component";
 import { ensureElement } from "../../utils/utils";
+import { IEvents } from "../base/Events";
 
 interface IFormData {
   valid: boolean;
@@ -16,7 +17,7 @@ export class Form<T> extends Component<IFormData> {
 
   constructor(
     container: HTMLFormElement,
-    actions?: { onSubmit: (data: T) => void },
+    protected events: IEvents,
   ) {
     super(container);
 
@@ -36,16 +37,18 @@ export class Form<T> extends Component<IFormData> {
 
     container.addEventListener("submit", (e: SubmitEvent) => {
       e.preventDefault();
-      actions?.onSubmit?.(this.getData());
+      this.events.emit(`${container.name}:submit`);
     });
   }
 
   protected onInputChange(name: string, value: string): void {
-    // Будет переопределено в наследниках
-  }
-
-  protected getData(): T {
-    return {} as T; // Переопределяется в наследниках
+    this.events.emit(
+      `${(this.container as HTMLFormElement).name}.${name}:change`,
+      {
+        field: name,
+        value: value,
+      },
+    );
   }
 
   set valid(value: boolean) {

@@ -1,4 +1,5 @@
 import { Form } from "./Form";
+import { IEvents } from "../base/Events";
 import { ensureElement } from "../../utils/utils";
 
 interface IContactsFormData {
@@ -6,16 +7,12 @@ interface IContactsFormData {
   phone: string;
 }
 
-interface IContactsFormActions {
-  onSubmit: (data: { email: string; phone: string }) => void;
-}
-
 export class ContactsForm extends Form<IContactsFormData> {
   protected emailInput: HTMLInputElement;
   protected phoneInput: HTMLInputElement;
 
-  constructor(container: HTMLFormElement, actions: IContactsFormActions) {
-    super(container);
+  constructor(container: HTMLFormElement, events: IEvents) {
+    super(container, events);
 
     this.emailInput = ensureElement<HTMLInputElement>(
       'input[name="email"]',
@@ -27,28 +24,16 @@ export class ContactsForm extends Form<IContactsFormData> {
     );
 
     this.emailInput.addEventListener("input", () => {
-      this.onInputChange("email", this.emailInput.value);
+      this.events.emit("contacts.email:change", {
+        value: this.emailInput.value,
+      });
     });
 
     this.phoneInput.addEventListener("input", () => {
-      this.onInputChange("phone", this.phoneInput.value);
-    });
-
-    container.addEventListener("submit", (e) => {
-      e.preventDefault();
-      actions.onSubmit({
-        email: this.emailInput.value,
-        phone: this.phoneInput.value,
+      this.events.emit("contacts.phone:change", {
+        value: this.phoneInput.value,
       });
     });
-  }
-
-  getEmail(): string {
-    return this.emailInput.value;
-  }
-
-  getPhone(): string {
-    return this.phoneInput.value;
   }
 
   set email(value: string) {
@@ -57,9 +42,5 @@ export class ContactsForm extends Form<IContactsFormData> {
 
   set phone(value: string) {
     this.phoneInput.value = value;
-  }
-
-  protected onInputChange(name: string, value: string): void {
-    // Для совместимости с родительским классом
   }
 }
